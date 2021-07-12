@@ -1,7 +1,9 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@chakra-ui/react";
 
 import SpotifyGetTopSongs from "./Components/SpotifyGetTopSongs";
+import Hero from "./Components/Hero";
+import Features from "./Components/Features";
 
 /* https://accounts.spotify.com/authorize?client_id=5fe01282e44241328a84e7c5cc169165&response_type=code&redirect_uri=https%3A%2F%2Fexample.com%2Fcallback&scope=user-read-private%20user-read-email&state=34fFs29kd09 */
 
@@ -13,41 +15,30 @@ const SPACE_DELIMITER = "%20";
 const SCOPES = ["user-top-read"];
 const SCOPES_URL_PARAM = SCOPES.join(SPACE_DELIMITER);
 
-const getTokenFromSpotifyAuth = (hash) => {
-	const stringAfterHash = hash.substring(1);
-	const paramsInUrl = stringAfterHash.split("&");
-	const paramsSeperate = paramsInUrl.reduce((acc, cur) => {
-		console.log(cur);
-		const [key, value] = cur.split("=");
-		acc[key] = value;
-		return acc;
-	}, {});
-
-	return paramsSeperate;
-};
-
 function App() {
+	const [authSuccess, setAuthSuccess] = useState(false);
+
 	useEffect(() => {
 		if (window.location.hash) {
-			const { access_token, expires_in, token_type } = getTokenFromSpotifyAuth(
-				window.location.hash
-			);
-			localStorage.clear();
-			localStorage.setItem("accessToken", access_token);
-			localStorage.setItem("tokenType", token_type);
-			localStorage.setItem("expiresIn", expires_in);
+			setAuthSuccess(true);
 		}
-	}, []);
+	}, [authSuccess]);
 
 	const handleLogin = () => {
 		window.location = `${SPOTIFY_AUTH_ENDPOINT}?client_id=${CLIENT_ID}&redirect_uri=${REDIRECT_URI_AFTER_LOGIN}&scope=${SCOPES_URL_PARAM}&response_type=token&show_dialog=true`;
 	};
 	return (
 		<div>
-			<Button onClick={handleLogin} colorScheme="whatsapp" ms="50%">
-				Log in to Spotify
-			</Button>
-			<SpotifyGetTopSongs />
+			<>
+				{authSuccess ? (
+					<SpotifyGetTopSongs />
+				) : (
+					<>
+						<Hero />
+						<Features />
+					</>
+				)}
+			</>
 		</div>
 	);
 }

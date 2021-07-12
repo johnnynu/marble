@@ -10,20 +10,48 @@ import {
 	Stack,
 } from "@chakra-ui/react";
 
-const TOP_SONGS_ENDPOINT =
-	"https://api.spotify.com/v1/me/top/tracks?time_range=short_term&limit=10";
-
-const SpotifyGetTop = () => {
+const SpotifyGetTopSongs = () => {
 	const [token, setToken] = useState("");
 	const [data, setData] = useState({});
+	const [time, setTime] = useState("medium");
 
-	useEffect(() => {
-		if (localStorage.getItem("accessToken")) {
-			setToken(localStorage.getItem("accessToken"));
-		}
-	}, []);
+	let TOP_SONGS_ENDPOINT = `https://api.spotify.com/v1/me/top/tracks?time_range=${time}_term&limit=10`;
 
-	const handleGetTopSongs = () => {
+	const hashparam = window.location.hash
+		.substring(1)
+		.split("&")
+		.reduce(function (initial, item) {
+			if (item) {
+				var parts = item.split("=");
+				initial[parts[0]] = decodeURIComponent(parts[1]);
+			}
+			return initial;
+		}, {});
+
+	const getTopSongs = async (token) => {
+		const settings = {
+			headers: {
+				Authorization: "Bearer " + token,
+			},
+		};
+		const response = await fetch(TOP_SONGS_ENDPOINT, settings);
+		const data = await response.json();
+		return data;
+	};
+
+	const handleAllTimeSongs = () => {
+		setTime("long");
+	};
+
+	const handleCurrentSongs = () => {
+		setTime("short");
+	};
+
+	const handle6MonthsSonga = () => {
+		setTime("medium");
+	};
+
+	/*const handleGetTopSongs = () => {
 		axios
 			.get(TOP_SONGS_ENDPOINT, {
 				headers: {
@@ -36,12 +64,42 @@ const SpotifyGetTop = () => {
 			.catch((error) => {
 				console.log(error);
 			});
-	};
+	};*/
+
+	/*useEffect(() => {
+		/*if (localStorage.getItem("accessToken")) {
+			setToken(localStorage.getItem("accessToken"));
+		}
+		setToken(accessToken);
+	}, []);*/
+
+	useEffect(() => {
+		setToken(hashparam.access_token);
+	}, []);
+
+	useEffect(() => {
+		async function fetchData() {
+			const newData = await getTopSongs(token);
+			setData(newData);
+		}
+		fetchData();
+	}, [token, time]);
+
+	/*useEffect(async () => {
+		const newData = await getTopSongs(token);
+		setData(newData);
+	}, [time]);*/
 
 	return (
 		<>
-			<Button colorScheme="whatsapp" ms="10%" onClick={handleGetTopSongs}>
-				Get Top Songs
+			<Button colorScheme="whatsapp" ms="10%" onClick={handleAllTimeSongs}>
+				Get Top Songs of All Time
+			</Button>
+			<Button colorScheme="whatsapp" ms="15%" onClick={handleCurrentSongs}>
+				Get Current Top Songs
+			</Button>
+			<Button colorScheme="whatsapp" ms="20%" onClick={handle6MonthsSonga}>
+				Get Top Songs from 6 Months Ago
 			</Button>
 			<Stack direction="column" ms="10%" spacing={1}>
 				{data?.items
@@ -61,4 +119,4 @@ const SpotifyGetTop = () => {
 	);
 };
 
-export default SpotifyGetTop;
+export default SpotifyGetTopSongs;
